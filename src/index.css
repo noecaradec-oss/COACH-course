@@ -581,3 +581,115 @@ details > summary {
   font-weight: 700;
   border-top-color: var(--vert);
 }
+
+/* ── Questionnaire ── */
+.q-progression {
+  height: 8px;
+  background: var(--bord);
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 0 0 20px;
+}
+
+.q-progression span {
+  display: block;
+  height: 100%;
+  background: var(--vert);
+  border-radius: 999px;
+  transition: width 0.2s;
+}
+
+.questionnaire h1 {
+  font-size: 1.5rem;
+  margin-bottom: 0;
+}
+
+.q-champ {
+  font-size: 1.25rem;
+  min-height: 56px;
+}
+
+.q-nombre {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.q-nombre span {
+  color: var(--discret);
+  font-size: 1.1rem;
+}
+
+.q-options {
+  display: grid;
+  gap: 10px;
+}
+
+.q-option {
+  display: grid;
+  gap: 2px;
+  text-align: left;
+  font: inherit;
+  font-weight: 600;
+  color: inherit;
+  background: var(--carte);
+  border: 1.5px solid var(--bord);
+  border-radius: 12px;
+  padding: 14px 16px;
+  min-height: 56px;
+  cursor: pointer;
+}
+
+.q-option small {
+  font-weight: 400;
+}
+
+.q-option-active {
+  border-color: var(--vert);
+  background: var(--vert-clair);
+}
+
+.q-navigation {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.q-navigation .bouton-principal {
+  margin-left: auto;
+  min-width: 140px;
+}
+
+.bilan {
+  margin: 0 0 12px;
+}
+
+.bilan > div {
+  padding: 8px 0;
+  border-top: 1px solid var(--bord);
+}
+
+.bilan > div:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.bilan dt {
+  color: var(--discret);
+  font-size: 0.85rem;
+}
+
+.bilan dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.bilan dd small {
+  font-weight: 400;
+}
+
+.bouton:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

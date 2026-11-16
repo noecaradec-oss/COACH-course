@@ -8,6 +8,7 @@ import { evaluationCourante } from '../domaine/evaluation'
 import { fcMaxEstimee } from '../domaine/fc'
 import type { Activite, Donnees, Evaluation, Objectif, Plan, Profil } from '../domaine/modele'
 import { genererPlan } from '../domaine/plan'
+import type { ResultatQuestionnaire } from '../domaine/questionnaire'
 import { reajuster } from '../domaine/reajustement'
 import { type Allures, calculerAllures } from '../domaine/vdot'
 import * as base from '../donnees/base'
@@ -32,6 +33,11 @@ interface Coach {
   objectif: Objectif | null
   plan: Plan | null
   majProfil(profil: Profil): Promise<void>
+  /**
+   * Enregistre le profil, l'évaluation et l'objectif issus du questionnaire, puis génère le plan.
+   * Le profil est enregistré même si le plan ne peut pas être créé : l'erreur est alors relancée.
+   */
+  appliquerQuestionnaire(r: ResultatQuestionnaire): Promise<void>
   ajouterEvaluation(e: Evaluation): Promise<void>
   supprimerEvaluation(id: string): Promise<void>
   /** Enregistre l'objectif et génère son plan. Lève une erreur lisible si impossible. */
@@ -76,6 +82,23 @@ export function FournisseurCoach({ children }: { children: ReactNode }) {
     await base.enregistrerProfil(profil)
     setDonnees((d) => ({ ...d, profil }))
   }, [])
+
+  const appliquerQuestionnaire = useCallback(
+    async (r: ResultatQuestionnaire) => {
+      await base.enregistrerProfil(r.profil)
+      // Refaire le questionnaire avec le même chrono ne doit pas créer un doublon.
+      const existante = donnees.evaluations.find((e) => r.evaluation && e.type === r.evaluation.type && e.distanceM === r.evaluation.distanceM && e.dureeS === r.evaluation.dureeS)
+      const nouvelle = r.evaluation && !existante ? r.evaluation : null
+      if (nouvelle) await base.enregistrer('evaluations', nouvelle)
+      const evaluations = nouvelle ? [...donnees.evaluations, nouvelle] : donnees.evaluations
+      setDonnees((d) => ({ ...d, profil: r.profil, evaluations }))
+      const plan = genererPlan({ id: nouvelId(), profil: r.profil, objectif: r.objectif, vdot: evaluationCourante(evaluations)?.vdot ?? null, dateDepart: jour })
+      await base.enregistrer('objectifs', r.objectif)
+      await base.enregistrer('plans', plan)
+      setDonnees((d) => ({ ...d, objectifs: remplacer(d.objectifs, r.objectif), plans: [...d.plans, plan] }))
+    },
+    [donnees.evaluations, jour],
+  )
 
   const ajouterEvaluation = useCallback(async (e: Evaluation) => {
     await base.enregistrer('evaluations', e)
@@ -156,6 +179,7 @@ export function FournisseurCoach({ children }: { children: ReactNode }) {
       objectif,
       plan,
       majProfil,
+      appliquerQuestionnaire,
       ajouterEvaluation,
       supprimerEvaluation,
       definirObjectif,
@@ -164,7 +188,7 @@ export function FournisseurCoach({ children }: { children: ReactNode }) {
       supprimerActivite,
       restaurer,
     }
-  }, [pret, erreur, donnees, jour, objectif, plan, majProfil, ajouterEvaluation, supprimerEvaluation, definirObjectif, reajusterPlan, enregistrerActivite, supprimerActivite, restaurer])
+  }, [pret, erreur, donnees, jour, objectif, plan, majProfil, appliquerQuestionnaire, ajouterEvaluation, supprimerEvaluation, definirObjectif, reajusterPlan, enregistrerActivite, supprimerActivite, restaurer])
 
   return <Contexte.Provider value={coach}>{children}</Contexte.Provider>
 }

@@ -8,7 +8,9 @@ import { dureeDansDomaineValide } from '../domaine/vdot'
 import { ErreurSauvegarde, exporter, importer } from '../donnees/sauvegarde'
 import { Carte, Champ, Message } from './composants'
 import { nouvelId, useCoach } from './Etat'
-import { FormulaireProfil } from './FormulaireProfil'
+import { NOMS_JOURS } from '../domaine/dates'
+import { reponsesDepuis } from '../domaine/questionnaire'
+import { Questionnaire } from './Questionnaire'
 import { NOMS_EVALUATIONS } from './texte'
 
 const DISTANCES = [
@@ -172,14 +174,41 @@ function Sauvegarde() {
   )
 }
 
+const NOMS_NIVEAUX = { 1: 'Débutant', 2: 'Intermédiaire', 3: 'Confirmé' }
+
 export function EcranProfil() {
-  const { donnees, evaluation, allures, fcMax, fcMaxEstimee, supprimerEvaluation } = useCoach()
+  const { donnees, profil, objectif, evaluation, allures, fcMax, fcMaxEstimee, supprimerEvaluation } = useCoach()
+  const [edition, setEdition] = useState(false)
   const evaluations = [...donnees.evaluations].sort((a, b) => b.date.localeCompare(a.date))
+  if (!profil) return null
+  if (edition) return <Questionnaire depart={reponsesDepuis(profil, objectif, evaluation)} terminer={() => setEdition(false)} />
+  const terrains = [profil.terrains.piste ? 'piste' : '', profil.terrains.cotes ? 'côte' : '', profil.terrains.chemins ? 'chemins' : ''].filter(Boolean)
   return (
     <>
       <h1>Profil</h1>
-      <Carte titre="Vous">
-        <FormulaireProfil libelleBouton="Enregistrer" />
+      <Carte titre={profil.prenom || 'Vous'}>
+        <dl className="bilan">
+          <div>
+            <dt>Niveau</dt>
+            <dd>{NOMS_NIVEAUX[profil.niveau]}</dd>
+          </div>
+          <div>
+            <dt>Volume de départ</dt>
+            <dd>{profil.volumeHebdoKm} km par semaine</dd>
+          </div>
+          <div>
+            <dt>Jours d’entraînement</dt>
+            <dd>{profil.joursDisponibles.map((j) => NOMS_JOURS[j]).join(', ')}</dd>
+          </div>
+          <div>
+            <dt>Terrains</dt>
+            <dd>{terrains.length > 0 ? terrains.join(', ') : 'route uniquement'}</dd>
+          </div>
+        </dl>
+        {(profil.blessureRecente || profil.alerteSante) && <Message type="erreur">Vous avez signalé {profil.alerteSante ? 'un signal de santé' : 'une blessure récente'} : consultez avant d’augmenter la charge.</Message>}
+        <button type="button" className="bouton" onClick={() => window.confirm('Refaire le questionnaire recrée votre plan à partir d’aujourd’hui. Continuer ?') && setEdition(true)}>
+          Modifier mes réponses
+        </button>
       </Carte>
 
       <Carte titre="Votre niveau">
