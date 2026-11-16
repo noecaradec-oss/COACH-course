@@ -60,8 +60,11 @@ export interface Objectif {
   deniveleM?: number
 }
 
-/** Allures du coureur évalué, ou repères au ressenti pour le débutant. */
-export type AllureBloc = CodeAllure | 'marche' | 'aisance' | 'course'
+/**
+ * Allures du coureur évalué, repères au ressenti pour le débutant, ou
+ * « exercice » pour ce qui ne se court pas (renforcement, éducatifs, mobilité).
+ */
+export type AllureBloc = CodeAllure | 'marche' | 'aisance' | 'course' | 'exercice'
 
 export interface Bloc {
   repetitions: number
@@ -71,7 +74,13 @@ export interface Bloc {
   allure: AllureBloc
   /** Récupération entre les répétitions. */
   recupS?: number
-  recupMode?: 'trot' | 'marche'
+  recupMode?: 'trot' | 'marche' | 'arret'
+  /** Zone cardiaque visée, de 1 à 5 (Seiler, 2010). */
+  zone?: number
+  /** Précision affichée : nom de l'exercice, type de terrain, consigne courte. */
+  libelle?: string
+  /** Place du bloc dans la séance. */
+  partie?: 'echauffement' | 'corps' | 'retour' | 'complement'
 }
 
 export type TypeSeance =

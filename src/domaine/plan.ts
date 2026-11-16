@@ -32,7 +32,7 @@ const ALLURE_MARCHE = 600
 const ALLURE_DEBUTANT = 450
 
 export function allureBloc(allure: AllureBloc, allures: Allures | null): number {
-  if (allure === 'marche') return ALLURE_MARCHE
+  if (allure === 'marche' || allure === 'exercice') return ALLURE_MARCHE
   if (allure === 'aisance' || allure === 'course') return allures ? allures.E.lente : ALLURE_DEBUTANT
   if (!allures) return ALLURE_DEBUTANT
   return allureDeReference(allures, allure)
@@ -40,16 +40,19 @@ export function allureBloc(allure: AllureBloc, allures: Allures | null): number 
 
 /** Durée (s) et distance (m) d'un bloc, récupérations comprises. */
 export function mesurerBloc(bloc: Bloc, allures: Allures | null): { dureeS: number; distanceM: number } {
+  // Pas de récupération après la dernière répétition.
+  const nbRecups = bloc.recupS ? bloc.repetitions - 1 : 0
+  const dureeRecup = nbRecups * (bloc.recupS ?? 0)
+  // Un exercice (renforcement, éducatifs, mobilité) prend du temps mais ne compte pas de kilomètres.
+  if (bloc.allure === 'exercice') return { dureeS: bloc.repetitions * (bloc.dureeS ?? 0) + dureeRecup, distanceM: 0 }
   const allure = allureBloc(bloc.allure, allures)
   const dureeRep = bloc.dureeS ?? ((bloc.distanceM ?? 0) / 1000) * allure
   const distanceRep = bloc.distanceM ?? ((bloc.dureeS ?? 0) / allure) * 1000
-  // Pas de récupération après la dernière répétition.
-  const nbRecups = bloc.recupS ? bloc.repetitions - 1 : 0
-  const allureRecup = bloc.recupMode === 'marche' ? ALLURE_MARCHE : allureBloc('aisance', allures)
-  const dureeRecup = nbRecups * (bloc.recupS ?? 0)
+  const distanceRecup =
+    bloc.recupMode === 'arret' ? 0 : (dureeRecup / (bloc.recupMode === 'marche' ? ALLURE_MARCHE : allureBloc('aisance', allures))) * 1000
   return {
     dureeS: bloc.repetitions * dureeRep + dureeRecup,
-    distanceM: bloc.repetitions * distanceRep + (dureeRecup / allureRecup) * 1000,
+    distanceM: bloc.repetitions * distanceRep + distanceRecup,
   }
 }
 

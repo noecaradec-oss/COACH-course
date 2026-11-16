@@ -25,6 +25,7 @@ function intensite(bloc: Bloc, allures: Allures | null, type: TypeSeance): strin
     case 'aisance':
       return 'de course lente'
     case 'course':
+    case 'exercice':
       return ''
     case 'E':
       return allures
