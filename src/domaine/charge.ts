@@ -91,9 +91,11 @@ export function repartirIntensites(categories: CategorieIntensite[]): Repartitio
   return r
 }
 
-// Sous 75 % de séances faciles, on s'écarte de ce qu'observent
-// Seiler & Kjerland (2006). On attend 8 séances pour juger.
-export const PART_FACILE_MIN = 0.75
+// Seiler & Kjerland (2006) observent 75–80 % de séances faciles. L'alerte ne
+// se déclenche que nettement en dessous (65 %) : choix d'entraîneur, pour ne
+// pas alerter un coureur à 6 séances dont 2 de qualité (67 %), schéma courant
+// en compétition. On attend 8 séances pour juger.
+export const PART_FACILE_MIN = 0.65
 export const SEANCES_MIN_POUR_JUGER = 8
 
 export function tropPeuDeFacile(r: Repartition): boolean {

@@ -94,9 +94,10 @@ describe('répartition des intensités (Seiler & Kjerland, 2006)', () => {
       total: 4,
     })
   })
-  it('alerte sous 75 % de facile, à partir de 8 séances', () => {
+  it('alerte sous 65 % de facile, à partir de 8 séances', () => {
     expect(tropPeuDeFacile({ facile: 5, seuil: 2, intense: 3, total: 10 })).toBe(true)
     expect(tropPeuDeFacile({ facile: 8, seuil: 1, intense: 1, total: 10 })).toBe(false)
+    expect(tropPeuDeFacile({ facile: 8, seuil: 2, intense: 2, total: 12 })).toBe(false) // 67 %
     expect(tropPeuDeFacile({ facile: 1, seuil: 1, intense: 1, total: 3 })).toBe(false)
   })
 })
