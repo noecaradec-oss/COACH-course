@@ -229,7 +229,7 @@ export function EcranPlan() {
                 {s.allegee && <span className="etiquette">allégée</span>}
               </span>
               <span className="semaine-info">
-                {NOMS_PHASES[s.phase]} · {s.volumeKm} km · du {formaterDate(s.debut, false)}
+                {NOMS_PHASES[s.phase]} · {Math.round(s.volumeKm)} km · du {formaterDate(s.debut, false)}
               </span>
             </summary>
             {s.seances.length === 0 ? (

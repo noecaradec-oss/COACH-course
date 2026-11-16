@@ -9,7 +9,7 @@ function activite(date: string, km: number, min: number, rpe?: number, seanceId?
 }
 
 function seance(id: string, date: string, categorie: SeancePrevue['categorie']): SeancePrevue {
-  return { id, date, type: 'footing', titre: 'x', categorie, blocs: [], distanceKm: 10, dureeMin: 60, consigne: '' }
+  return { id, date, type: 'endurance', titre: 'x', categorie, blocs: [], distanceKm: 10, dureeMin: 60, consigne: '', rpeVise: categorie === 'facile' ? 3 : 8 }
 }
 
 const plan: Plan = {
@@ -22,6 +22,7 @@ const plan: Plan = {
     { numero: 2, debut: '2026-11-16', phase: 'base', allegee: false, volumeKm: 32, seances: [seance('s4', '2026-11-16', 'facile')] },
   ],
   avertissements: [],
+  ajustements: [],
 }
 
 const JOUR = '2026-11-18' // mercredi

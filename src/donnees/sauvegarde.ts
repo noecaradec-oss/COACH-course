@@ -3,6 +3,7 @@
 // se protéger d'un effacement des données du navigateur.
 
 import { type Donnees, VERSION_DONNEES } from '../domaine/modele'
+import { migrer } from './migration'
 
 const FORMAT = 'coach-course'
 
@@ -49,5 +50,6 @@ export function importer(texte: string): Donnees {
     }
     ;(resultat[nom] as unknown[]) = liste
   }
-  return resultat
+  // Une sauvegarde faite avec une version précédente est mise à niveau.
+  return migrer(resultat)
 }

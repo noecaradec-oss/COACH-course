@@ -51,7 +51,7 @@ export function decrireBloc(bloc: Bloc, allures: Allures | null, type: TypeSeanc
 
 export const NOMS_PHASES: Record<Phase, string> = {
   debutant: 'Marche-course',
-  base: 'Base',
+  base: 'Foncier',
   specifique: 'Spécifique',
   affutage: 'Affûtage',
 }
@@ -74,6 +74,7 @@ export const NOMS_EVALUATIONS: Record<TypeEvaluation, string> = {
   course: 'Course ou chrono',
   demiCooper: 'Demi-Cooper (6 min)',
   vameval: 'VAMEVAL',
+  footing: 'Allure de footing (estimation)',
 }
 
 export const TEXTES_REALISME: Record<Realisme, string> = {

@@ -20,9 +20,13 @@ const DISTANCES = [
   { nom: 'Marathon', m: 42195 },
 ]
 
+/** Les évaluations qu'on peut saisir ici ; l'estimation par l'allure de footing vient du questionnaire. */
+type TypeTest = Exclude<TypeEvaluation, 'footing'>
+const TYPES_TEST: TypeTest[] = ['course', 'demiCooper', 'vameval']
+
 export function FormulaireEvaluation() {
   const { ajouterEvaluation, jour } = useCoach()
-  const [type, setType] = useState<TypeEvaluation>('course')
+  const [type, setType] = useState<TypeTest>('course')
   const [date, setDate] = useState(jour)
   const [distance, setDistance] = useState('5000')
   const [autre, setAutre] = useState('')
@@ -64,8 +68,8 @@ export function FormulaireEvaluation() {
   return (
     <form onSubmit={valider} className="formulaire">
       <Champ libelle="Type d’évaluation">
-        <select value={type} onChange={(e) => setType(e.target.value as TypeEvaluation)}>
-          {(Object.keys(NOMS_EVALUATIONS) as TypeEvaluation[]).map((t) => (
+        <select value={type} onChange={(e) => setType(e.target.value as TypeTest)}>
+          {TYPES_TEST.map((t) => (
             <option key={t} value={t}>
               {NOMS_EVALUATIONS[t]}
             </option>

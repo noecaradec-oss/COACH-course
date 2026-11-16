@@ -5,9 +5,10 @@
 
 import type { CategorieIntensite } from './charge'
 import type { DateIso } from './dates'
+import type { Niveau, TypeFiche } from './seances'
 import type { CodeAllure } from './vdot'
 
-export const VERSION_DONNEES = 1
+export const VERSION_DONNEES = 2
 
 export type Sexe = 'femme' | 'homme'
 
@@ -29,9 +30,25 @@ export interface Profil {
   fcMax?: number
   fcRepos?: number
   blessures: string
+  /** 1 = débutant, 2 = intermédiaire, 3 = confirmé ; calculé par le questionnaire. */
+  niveau: Niveau
+  /** Blessure dans les 3 derniers mois : volume de départ réduit, conseil de consulter. */
+  blessureRecente: boolean
+  /** Signal de santé au questionnaire : conseil de voir un médecin avant de commencer. */
+  alerteSante: boolean
+  /** Jour préféré pour la sortie longue. */
+  sortieLongueJour?: JourSemaine
+  /** Durée maximale d'une séance en semaine, en minutes. */
+  dureeMaxSemaineMin?: number
+  plusLongueSortieKm?: number
+  materiel: { gps: boolean; cardio: boolean }
+  terrains: { piste: boolean; cotes: boolean; chemins: boolean }
 }
 
-export type TypeEvaluation = 'course' | 'demiCooper' | 'vameval'
+/** « footing » : estimation grossière à partir de l'allure de footing, faute de chrono. */
+export type TypeEvaluation = 'course' | 'demiCooper' | 'vameval' | 'footing'
+
+export type Fiabilite = 'bonne' | 'moyenne' | 'faible'
 
 export interface Evaluation {
   id: string
@@ -43,6 +60,8 @@ export interface Evaluation {
   dureeS: number
   vdot: number
   vmaKmh: number
+  /** Confiance dans l'estimation : chrono récent, ancien, ou simple allure de footing. */
+  fiabilite: Fiabilite
   note: string
 }
 
@@ -83,17 +102,8 @@ export interface Bloc {
   partie?: 'echauffement' | 'corps' | 'retour' | 'complement'
 }
 
-export type TypeSeance =
-  | 'footing'
-  | 'sortieLongue'
-  | 'seuil'
-  | 'intervalles'
-  | 'repetitions'
-  | 'allureMarathon'
-  | 'cotes'
-  | 'rappel'
-  | 'marcheCourse'
-  | 'course'
+/** Les types de la base de séances, plus la course elle-même. */
+export type TypeSeance = TypeFiche | 'course'
 
 export type Phase = 'debutant' | 'base' | 'specifique' | 'affutage'
 
@@ -108,6 +118,10 @@ export interface SeancePrevue {
   distanceKm: number
   dureeMin: number
   consigne: string
+  /** Ressenti attendu, de 1 à 10 (Foster et al., 2001). */
+  rpeVise: number
+  /** Fiche de la base de séances dont la séance est tirée. */
+  ficheId?: string
 }
 
 export interface SemainePlan {
@@ -129,6 +143,8 @@ export interface Plan {
   vdotDepart?: number
   semaines: SemainePlan[]
   avertissements: string[]
+  /** Raisons du dernier réajustement, s'il y en a eu un. */
+  ajustements: string[]
 }
 
 export interface Tour {

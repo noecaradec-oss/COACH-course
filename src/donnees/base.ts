@@ -3,6 +3,7 @@
 
 import { type DBSchema, type IDBPDatabase, openDB } from 'idb'
 import type { Activite, Donnees, Evaluation, Objectif, Plan, Profil } from '../domaine/modele'
+import { migrer } from './migration'
 
 interface Schema extends DBSchema {
   profil: { key: string; value: Profil }
@@ -36,7 +37,8 @@ export async function chargerTout(): Promise<Donnees> {
     db.getAll('plans'),
     db.getAll('activites'),
   ])
-  return { profil: profil ?? null, evaluations, objectifs, plans, activites }
+  // Les enregistrements d'une version précédente sont mis à niveau à la lecture.
+  return migrer({ profil: profil ?? null, evaluations, objectifs, plans, activites })
 }
 
 export async function enregistrerProfil(profil: Profil): Promise<void> {

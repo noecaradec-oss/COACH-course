@@ -8,7 +8,7 @@ import { evaluationCourante } from '../domaine/evaluation'
 import { fcMaxEstimee } from '../domaine/fc'
 import type { Activite, Donnees, Evaluation, Objectif, Plan, Profil } from '../domaine/modele'
 import { genererPlan } from '../domaine/plan'
-import { volumeRecentKm } from '../domaine/suivi'
+import { reajuster } from '../domaine/reajustement'
 import { type Allures, calculerAllures } from '../domaine/vdot'
 import * as base from '../donnees/base'
 import { donneesVides } from '../donnees/sauvegarde'
@@ -88,7 +88,7 @@ export function FournisseurCoach({ children }: { children: ReactNode }) {
   }, [])
 
   const creerPlan = useCallback(
-    async (d: Donnees, objectif: Objectif, volumeDepartKm?: number) => {
+    async (d: Donnees, objectif: Objectif) => {
       if (!d.profil) throw new Error('Remplissez d’abord votre profil.')
       const plan = genererPlan({
         id: nouvelId(),
@@ -96,7 +96,6 @@ export function FournisseurCoach({ children }: { children: ReactNode }) {
         objectif,
         vdot: evaluationCourante(d.evaluations)?.vdot ?? null,
         dateDepart: jour,
-        ...(volumeDepartKm !== undefined ? { volumeDepartKm } : {}),
       })
       await base.enregistrer('objectifs', objectif)
       await base.enregistrer('plans', plan)
@@ -111,9 +110,19 @@ export function FournisseurCoach({ children }: { children: ReactNode }) {
   const objectif = useMemo(() => donnees.objectifs.find((o) => o.id === plan?.objectifId) ?? null, [donnees.objectifs, plan])
 
   const reajusterPlan = useCallback(async () => {
-    if (!objectif) return
-    await creerPlan(donnees, objectif, volumeRecentKm(donnees.activites, jour) ?? undefined)
-  }, [creerPlan, donnees, objectif, jour])
+    if (!objectif || !plan || !donnees.profil) return
+    const nouveau = reajuster({
+      id: nouvelId(),
+      plan,
+      profil: donnees.profil,
+      objectif,
+      vdot: evaluationCourante(donnees.evaluations)?.vdot ?? null,
+      activites: donnees.activites,
+      jour,
+    })
+    await base.enregistrer('plans', nouveau)
+    setDonnees((x) => ({ ...x, plans: [...x.plans, nouveau] }))
+  }, [donnees, objectif, plan, jour])
 
   const enregistrerActivite = useCallback(async (a: Activite) => {
     await base.enregistrer('activites', a)

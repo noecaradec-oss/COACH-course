@@ -3,8 +3,8 @@ import type { Donnees } from '../domaine/modele'
 import { ErreurSauvegarde, donneesVides, exporter, importer } from './sauvegarde'
 
 const donnees: Donnees = {
-  profil: { id: 'moi', version: 1, prenom: 'Léa', anneeNaissance: 1992, anneesPratique: 3, volumeHebdoKm: 30, joursDisponibles: [1, 3, 6], blessures: '' },
-  evaluations: [{ id: 'e1', version: 1, date: '2026-11-01', type: 'course', distanceM: 5000, dureeS: 1200, vdot: 49.8, vmaKmh: 16.5, note: '' }],
+  profil: { id: 'moi', version: 2, prenom: 'Léa', anneeNaissance: 1992, anneesPratique: 3, volumeHebdoKm: 30, joursDisponibles: [1, 3, 6], blessures: '', niveau: 2, blessureRecente: false, alerteSante: false, materiel: { gps: true, cardio: false }, terrains: { piste: false, cotes: true, chemins: true } },
+  evaluations: [{ id: 'e1', version: 2, date: '2026-11-01', type: 'course', distanceM: 5000, dureeS: 1200, vdot: 49.8, vmaKmh: 16.5, fiabilite: 'bonne', note: '' }],
   objectifs: [],
   plans: [],
   activites: [{ id: 'a1', version: 1, date: '2026-11-10', source: 'manuel', distanceM: 8000, dureeS: 2880, tours: [], commentaire: 'Bien', rpe: 3 }],

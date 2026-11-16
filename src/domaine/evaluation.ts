@@ -1,9 +1,9 @@
 // Évaluation du niveau : d'une course ou d'un test de terrain vers VDOT et VMA.
 
 import type { DateIso } from './dates'
-import type { Evaluation, TypeEvaluation } from './modele'
+import type { Evaluation, Fiabilite, TypeEvaluation } from './modele'
 import { VERSION_DONNEES } from './modele'
-import { DUREE_VMA_MIN, calculerVdot, vmaDepuisVdot } from './vdot'
+import { DUREE_VMA_MIN, calculerVdot, vmaDepuisVdot, vo2DepuisVitesse } from './vdot'
 
 export type SaisieEvaluation =
   /** Course ou chrono récent. */
@@ -21,10 +21,41 @@ export type SaisieEvaluation =
    * approximation d'entraîneur (voir vdot.ts).
    */
   | { type: 'vameval'; vitessePalierKmh: number }
+  /**
+   * Faute de chrono : allure habituelle de footing, en secondes par km.
+   * On suppose que le footing se court au milieu de la fourchette
+   * d'endurance de Daniels (2014), soit 66,5 % du VDOT. Estimation
+   * d'entraîneur, grossière : beaucoup de coureurs font leurs footings trop
+   * vite, ce qui surestime le niveau. À remplacer dès qu'un chrono existe.
+   */
+  | { type: 'footing'; allureSParKm: number }
 
-export function evaluer(saisie: SaisieEvaluation, date: DateIso, id: string, note = ''): Evaluation {
+const FRACTION_FOOTING = 0.665
+
+/** VDOT estimé à partir de l'allure de footing (voir SaisieEvaluation). */
+export function vdotDepuisFooting(allureSParKm: number): number {
+  return vo2DepuisVitesse(60000 / allureSParKm) / FRACTION_FOOTING
+}
+
+export function evaluer(saisie: SaisieEvaluation, date: DateIso, id: string, note = '', fiabilite?: Fiabilite): Evaluation {
   let distanceM: number
   let dureeS: number
+  if (saisie.type === 'footing') {
+    // Pas de performance : on enregistre 30 min à l'allure de footing, pour mémoire.
+    const vdotEstime = vdotDepuisFooting(saisie.allureSParKm)
+    return {
+      id,
+      version: VERSION_DONNEES,
+      date,
+      type: 'footing',
+      distanceM: Math.round((1800 / saisie.allureSParKm) * 1000),
+      dureeS: 1800,
+      vdot: Math.round(vdotEstime * 10) / 10,
+      vmaKmh: Math.round(vmaDepuisVdot(vdotEstime) * 10) / 10,
+      fiabilite: 'faible',
+      note,
+    }
+  }
   if (saisie.type === 'course') {
     distanceM = saisie.distanceM
     dureeS = saisie.dureeS
@@ -46,6 +77,7 @@ export function evaluer(saisie: SaisieEvaluation, date: DateIso, id: string, not
     dureeS: Math.round(dureeS),
     vdot: Math.round(vdot * 10) / 10,
     vmaKmh: Math.round(vmaDepuisVdot(vdot) * 10) / 10,
+    fiabilite: fiabilite ?? 'bonne',
     note,
   }
 }

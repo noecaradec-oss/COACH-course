@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from 'react'
 import { NOMS_JOURS } from '../domaine/dates'
 import { fcMaxEstimee } from '../domaine/fc'
+import { determinerNiveau } from '../domaine/niveau'
 import { type JourSemaine, type Profil, type Sexe, VERSION_DONNEES } from '../domaine/modele'
 import { Champ, Message } from './composants'
 import { useCoach } from './Etat'
@@ -55,6 +56,11 @@ export function FormulaireProfil({ libelleBouton, apresEnregistrement }: { libel
       volumeHebdoKm: vol,
       joursDisponibles: jours,
       blessures: blessures.trim(),
+      niveau: profil?.niveau ?? determinerNiveau(ans, vol, false),
+      blessureRecente: profil?.blessureRecente ?? false,
+      alerteSante: profil?.alerteSante ?? false,
+      materiel: profil?.materiel ?? { gps: false, cardio: false },
+      terrains: profil?.terrains ?? { piste: true, cotes: true, chemins: true },
       ...(sexe ? { sexe } : {}),
       ...(max !== null ? { fcMax: max } : {}),
       ...(repos !== null ? { fcRepos: repos } : {}),
