@@ -4,7 +4,7 @@ import { type SaisieEvaluation, evaluer } from '../domaine/evaluation'
 import { zonesFc } from '../domaine/fc'
 import { formaterAllure, formaterDistance, formaterDuree, lireDuree } from '../domaine/format'
 import type { TypeEvaluation } from '../domaine/modele'
-import { dureeDansDomaineValide } from '../domaine/vdot'
+import { dureeDansDomaineValide, predireTemps } from '../domaine/vdot'
 import { ErreurSauvegarde, exporter, importer } from '../donnees/sauvegarde'
 import { Carte, Champ, Message } from './composants'
 import { nouvelId, useCoach } from './Etat'
@@ -250,6 +250,18 @@ export function EcranProfil() {
                 </tr>
               </tbody>
             </table>
+            <table>
+              <caption>Temps équivalents sur d’autres distances</caption>
+              <tbody>
+                {DISTANCES.map((d) => (
+                  <tr key={d.m}>
+                    <th scope="row">{d.nom}</th>
+                    <td>{formaterDuree(predireTemps(evaluation.vdot, d.m))}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="aide">Équivalences du modèle de Daniels &amp; Gilbert (1979). Elles supposent un entraînement adapté à la distance : un chrono sur 5 km ne garantit pas le marathon correspondant.</p>
           </>
         ) : (
           <p>Pas encore d’évaluation. Elle sert à calculer vos allures. Si vous débutez, vous pouvez vous en passer pour le programme « Mon premier 5 km ».</p>
@@ -333,12 +345,16 @@ export function EcranProfil() {
             <li>VMA : Billat &amp; Koralsztein (1996) ; Cazorla &amp; Léger (1993).</li>
             <li>FC max et zones : Tanaka et al. (2001) ; Seiler (2010) ; Karvonen et al. (1957).</li>
             <li>Répartition des intensités : Seiler &amp; Kjerland (2006) ; Stöggl &amp; Sperlich (2014).</li>
-            <li>Charge : Foster (1998 ; 2001) ; Banister (1991).</li>
+            <li>Charge et ressenti : Foster (1998 ; 2001) ; Banister (1975 ; 1991).</li>
             <li>Progression : Nielsen et al. (2014) ; Buist et al. (2008).</li>
-            <li>Périodisation et affûtage : Bompa &amp; Buzzichelli (2018) ; Bosquet et al. (2007).</li>
+            <li>Périodisation et affûtage : Bompa &amp; Buzzichelli (2018) ; Bosquet et al. (2007) ; Mujika &amp; Padilla (2000 ; 2003).</li>
             <li>Dénivelé : Minetti et al. (2002).</li>
-            <li>Fractionné : Billat (2001).</li>
+            <li>Fractionné et côtes : Billat (2001) ; Barnes et al. (2013).</li>
+            <li>Renforcement : Blagrove et al. (2018).</li>
+            <li>Santé avant de commencer : Warburton et al. (2011) ; Riebe et al. (2015).</li>
+            <li>Ravitaillement : Thomas, Erdman &amp; Burke (2016).</li>
           </ul>
+          <p className="aide">Modèle volontairement écarté : le ratio de charge aiguë / chronique (ACWR, Gabbett, 2016), dont la valeur prédictive est contestée (Lolli et al., 2019 ; Impellizzeri et al., 2020).</p>
           <p className="aide">Plusieurs réglages (durée des phases, semaine allégée, plafonds de volume, programme marche-course) relèvent de la pratique d’entraîneur, sans étude précise derrière eux. Ils sont signalés comme tels dans le code.</p>
         </details>
       </Carte>

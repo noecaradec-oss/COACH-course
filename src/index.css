@@ -7,9 +7,13 @@
   --vert: #0f5132;
   --vert-clair: #e3efe8;
   --sur-vert: #ffffff;
-  --facile: #2f8f5b;
-  --seuil: #c98a12;
-  --intense: #c2452f;
+  /* Intensités et série des graphiques : couleurs vérifiées avec un validateur
+     (séparation pour les daltoniens, contraste sur le fond des cartes). */
+  --facile: #1baf7a;
+  --seuil: #2a78d6;
+  --intense: #eb6834;
+  --serie: #6250d6;
+  --or: #c98a12;
   --erreur-fond: #fbeae6;
   --erreur-texte: #8a2a18;
   --info-fond: #eef1f6;
@@ -27,9 +31,11 @@
     --vert: #58b888;
     --vert-clair: #1f2f27;
     --sur-vert: #0c1410;
-    --facile: #58b888;
-    --seuil: #e0aa3e;
-    --intense: #e5735d;
+    --facile: #199e70;
+    --seuil: #3987e5;
+    --intense: #d95926;
+    --serie: #9085e9;
+    --or: #e0aa3e;
     --erreur-fond: #3a1f19;
     --erreur-texte: #f3b3a6;
     --info-fond: #1f262e;
@@ -408,7 +414,7 @@ td {
 }
 
 .fait {
-  color: var(--facile);
+  color: var(--vert);
   font-weight: 600;
 }
 
@@ -440,20 +446,20 @@ td {
   font-weight: 600;
   border-radius: 999px;
   padding: 2px 10px;
-  border: 1.5px solid currentColor;
+  border: 2px solid var(--bord);
   white-space: nowrap;
 }
 
 .pastille-facile {
-  color: var(--facile);
+  border-color: var(--facile);
 }
 
 .pastille-seuil {
-  color: var(--seuil);
+  border-color: var(--seuil);
 }
 
 .pastille-intense {
-  color: var(--intense);
+  border-color: var(--intense);
 }
 
 .seance-tete {
@@ -491,61 +497,6 @@ td {
 
 .activite-tete strong {
   display: inline-block;
-}
-
-.barres {
-  width: 100%;
-  height: auto;
-  display: block;
-  margin-bottom: 8px;
-}
-
-.barre {
-  fill: var(--facile);
-  opacity: 0.5;
-}
-
-.barre-courante {
-  opacity: 1;
-}
-
-.barre-axe {
-  stroke: var(--bord);
-}
-
-.barre-repere {
-  stroke: var(--texte);
-  stroke-width: 1.5;
-  stroke-dasharray: 4 3;
-}
-
-.barre-valeur,
-.barre-etiquette {
-  font-size: 10px;
-  text-anchor: middle;
-  fill: var(--discret);
-  font-variant-numeric: tabular-nums;
-}
-
-.repartition {
-  display: flex;
-  height: 14px;
-  border-radius: 999px;
-  overflow: hidden;
-  gap: 2px;
-  margin: 0 0 10px;
-}
-
-.legende {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.875rem;
-}
-
-.legende .point:not(:first-child) {
-  margin-left: 10px;
 }
 
 details > summary {
@@ -780,7 +731,7 @@ details > summary {
 .jauge span {
   display: block;
   height: 100%;
-  background: var(--seuil);
+  background: var(--or);
   border-radius: 999px;
 }
 
@@ -813,8 +764,8 @@ details > summary {
 
 .badge-obtenu .medaille,
 .soleil-badge .medaille {
-  border-color: var(--seuil);
-  background: radial-gradient(circle at 35% 35%, #ffe08a, var(--seuil));
+  border-color: var(--or);
+  background: radial-gradient(circle at 35% 35%, #ffe08a, var(--or));
 }
 
 /* ── Séance en cours : lisible en plein soleil ──
@@ -1044,4 +995,253 @@ details > summary {
   padding: 14px;
   margin-top: 14px;
   font-size: 1.05rem;
+}
+
+/* ── Tableau de bord ── */
+.graphique {
+  margin: 0 0 8px;
+}
+
+.graphique svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.g-grille {
+  stroke: var(--bord);
+  stroke-width: 1;
+}
+
+.g-axe {
+  stroke: var(--discret);
+  stroke-width: 1;
+}
+
+.g-tick,
+.g-valeur {
+  font-size: 10px;
+  fill: var(--discret);
+  text-anchor: middle;
+  font-variant-numeric: tabular-nums;
+}
+
+.g-tick-y {
+  text-anchor: end;
+}
+
+.g-tick-choisi,
+.g-valeur {
+  fill: var(--texte);
+  font-weight: 700;
+}
+
+.g-barre {
+  fill: var(--serie);
+  opacity: 0.55;
+}
+
+.g-barre-choisie {
+  opacity: 1;
+}
+
+.g-repere {
+  stroke: var(--texte);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.g-ligne {
+  fill: none;
+  stroke: var(--serie);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.g-lien {
+  stroke: var(--discret);
+  stroke-width: 1.5;
+}
+
+.g-point {
+  fill: var(--serie);
+  stroke: var(--carte);
+  stroke-width: 2;
+}
+
+.g-anneau {
+  fill: var(--carte);
+  stroke: var(--discret);
+  stroke-width: 2;
+}
+
+.g-cible {
+  cursor: pointer;
+  outline: none;
+}
+
+.g-cible:focus-visible .g-tick {
+  fill: var(--texte);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.graphique figcaption {
+  min-height: 1.5em;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.g-legende {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-size: 0.85rem;
+  margin: 6px 0 0;
+}
+
+.g-legende span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.g-cle {
+  display: inline-block;
+  flex: none;
+}
+
+.g-cle-barre {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--serie);
+}
+
+.g-cle-trait {
+  width: 14px;
+  height: 0;
+  border-top: 2px solid var(--texte);
+}
+
+.g-cle-point {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--serie);
+}
+
+.g-cle-anneau {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--discret);
+}
+
+.g-segments {
+  display: flex;
+  gap: 2px;
+  height: 28px;
+}
+
+.g-segment {
+  display: flex;
+  align-items: center;
+  padding-left: 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #0b0b0b;
+  min-width: 4px;
+  overflow: visible;
+  white-space: nowrap;
+}
+
+.g-segment-facile {
+  background: var(--facile);
+}
+
+.g-segment-seuil {
+  background: var(--seuil);
+  color: #fff;
+}
+
+.g-segment-intense {
+  background: var(--intense);
+}
+
+.g-chiffres {
+  font-size: 0.85rem;
+  margin-top: 6px;
+}
+
+.g-chiffres summary {
+  color: var(--discret);
+  padding: 8px 0;
+}
+
+.g-chiffres th[scope='col'] {
+  font-weight: 600;
+  text-align: right;
+}
+
+.g-chiffres th[scope='col']:first-child {
+  text-align: left;
+}
+
+.pr-liste {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 8px;
+}
+
+.pr-ligne {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid var(--bord);
+}
+
+.pr-date {
+  flex: none;
+  width: 2.6em;
+  color: var(--discret);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.pr-texte {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+}
+
+.pr-texte strong {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.pr-rpe {
+  flex: none;
+  text-align: right;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.pr-rpe small {
+  font-weight: 400;
+}
+
+.pr-ecart {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--erreur-fond);
+  color: var(--erreur-texte);
+  font-size: 0.8rem;
 }

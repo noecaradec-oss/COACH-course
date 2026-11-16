@@ -14,12 +14,12 @@ npm run build    # version à publier (dossier dist/)
 
 ## Ce que fait l'appli
 
-1. **Profil** : âge, pratique, volume, jours disponibles, fréquence cardiaque.
-2. **Évaluation** : course récente, demi-Cooper ou VAMEVAL → VMA, allures, zones.
-3. **Objectif** : premier 5 km, piste, route, cross ou trail, avec contrôle de réalisme.
-4. **Plan** : phases base / spécifique / affûtage, séance par séance.
-5. **Journal** : import de fichiers .fit ou saisie, ressenti de 0 à 10.
-6. **Suivi** : kilométrage, charge, équilibre des intensités, alertes.
+1. **Questionnaire** : 25 questions au plus, une par écran. Il en sort un niveau, un VDOT estimé, un volume de départ et les jours d'entraînement, avec un conseil de consulter en cas de blessure récente ou de signal de santé.
+2. **Plan** : phases foncier / spécifique / affûtage, jusqu'à 24 semaines, construit en piochant dans une base de 186 séances. Il se réajuste, sur proposition, d'après les séances manquées et le ressenti réel.
+3. **Séance du jour** : une touche pour commencer, déroulé étape par étape lisible en plein soleil, compte à rebours, conseil adapté.
+4. **Ressenti** : de 1 à 10, en deux touches, puis badges et série de semaines.
+5. **Journal** : import de fichiers .fit (SDK officiel Garmin) ou saisie.
+6. **Tableau de bord** : volume, charge, répartition des intensités, ressenti prévu et réel, évolution du niveau, régularité. Export CSV et PDF, prévu et réalisé côte à côte.
 
 Tout est stocké dans le navigateur (IndexedDB). L'onglet Profil permet de
 télécharger et de restaurer une sauvegarde.
@@ -32,8 +32,10 @@ l'application » (Chrome). L'appli fonctionne ensuite hors ligne.
 
 ## Organisation
 
+- `docs/architecture.md` : vue d'ensemble, sans code.
 - `src/domaine` : calculs d'entraînement, sans interface. Chaque règle cite sa source en commentaire.
-- `src/donnees` : stockage local (IndexedDB) et sauvegarde.
+- `src/donnees` : stockage local (IndexedDB), sauvegarde, conversion des anciennes données, exports CSV et PDF.
+- `src/donnees/seances.json` : la base de séances, fabriquée par `node scripts/generer-seances.mjs`.
 - `src/fit` : lecture des fichiers .fit avec le SDK officiel Garmin.
 - `src/ui` : écrans.
 

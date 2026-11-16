@@ -210,7 +210,7 @@ export function EcranJournal() {
         const activite: Activite = { ...resume, id: nouvelId(), version: VERSION_DONNEES, commentaire: '', nomFichier: fichier.name, ...(prevue ? { seanceId: prevue.id } : {}) }
         await enregistrerActivite(activite)
         connues.push(activite)
-        retours.push({ type: 'succes', texte: `${fichier.name} : ${formaterDistance(resume.distanceM)} le ${formaterDate(resume.date)}. Pensez à noter votre ressenti.` })
+        retours.push({ type: 'succes', texte: `${fichier.name} : ${formaterDistance(resume.distanceM)} le ${formaterDate(resume.date)} : pensez à noter votre ressenti.` })
       } catch (err) {
         retours.push({ type: 'erreur', texte: `${fichier.name} : ${err instanceof ErreurFit ? err.message : 'lecture impossible.'}` })
       }

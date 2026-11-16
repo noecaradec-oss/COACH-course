@@ -115,7 +115,7 @@ export function calculerAlertes(activites: Activite[], plan: Plan | null, jour: 
   if (hausse) {
     alertes.push({
       titre: 'Kilométrage en forte hausse',
-      detail: `Vous êtes passé de ${hausse[0]} à ${hausse[1]} km d’une semaine à l’autre (+${Math.round((hausse[1] / hausse[0] - 1) * 100)} %). Au-delà de +30 %, le risque de blessure augmente chez les débutants. Stabilisez une semaine.`,
+      detail: `Vous êtes passé de ${String(hausse[0]).replace('.', ',')} à ${String(hausse[1]).replace('.', ',')} km d’une semaine à l’autre (+${Math.round((hausse[1] / hausse[0] - 1) * 100)} %). Au-delà de +30 %, le risque de blessure augmente chez les débutants. Stabilisez une semaine.`,
       source: 'Nielsen et al., 2014',
     })
   }
