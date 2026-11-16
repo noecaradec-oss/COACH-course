@@ -5,7 +5,7 @@ import { formaterDate } from '../domaine/dates'
 import { formaterDuree } from '../domaine/format'
 import type { SeancePrevue } from '../domaine/modele'
 import type { Allures } from '../domaine/vdot'
-import { NOMS_CATEGORIES, decrireBloc } from './texte'
+import { NOMS_CATEGORIES, NOMS_PARTIES, decrireBloc } from './texte'
 
 export function Carte({ titre, children, accent }: { titre?: string; children: ReactNode; accent?: boolean }) {
   return (
@@ -39,7 +39,14 @@ export function Pastille({ categorie }: { categorie: SeancePrevue['categorie'] }
 }
 
 /** Contenu détaillé d'une séance : blocs traduits en allures, consigne. */
-export function DetailSeance({ seance, allures }: { seance: SeancePrevue; allures: Allures | null }) {
+export function DetailSeance({ seance, allures, sansConsigne = false }: { seance: SeancePrevue; allures: Allures | null; sansConsigne?: boolean }) {
+  // Les blocs sont regroupés par partie : échauffement, séance, retour au calme, complément.
+  const parties: { nom: string; blocs: SeancePrevue['blocs'] }[] = []
+  for (const b of seance.blocs) {
+    const nom = NOMS_PARTIES[b.partie ?? 'corps']
+    if (parties.at(-1)?.nom === nom) parties.at(-1)!.blocs.push(b)
+    else parties.push({ nom, blocs: [b] })
+  }
   return (
     <div className="detail-seance">
       {seance.type === 'course' ? (
@@ -47,13 +54,18 @@ export function DetailSeance({ seance, allures }: { seance: SeancePrevue; allure
           {String(seance.distanceKm).replace('.', ',')} km · temps estimé à votre niveau actuel : {formaterDuree(seance.dureeMin * 60)}
         </p>
       ) : (
-        <ol>
-          {seance.blocs.map((b, i) => (
-            <li key={i}>{decrireBloc(b, allures, seance.type)}</li>
-          ))}
-        </ol>
+        parties.map((partie) => (
+          <div key={partie.nom}>
+            {parties.length > 1 && <h3 className="partie">{partie.nom}</h3>}
+            <ul>
+              {partie.blocs.map((b, i) => (
+                <li key={i}>{decrireBloc(b, allures)}</li>
+              ))}
+            </ul>
+          </div>
+        ))
       )}
-      <p className="consigne">{seance.consigne}</p>
+      {!sansConsigne && <p className="consigne">{seance.consigne}</p>}
     </div>
   )
 }

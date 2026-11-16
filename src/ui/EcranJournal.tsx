@@ -6,28 +6,27 @@ import { type Activite, VERSION_DONNEES } from '../domaine/modele'
 import { toutesLesSeances } from '../domaine/suivi'
 import { Carte, Champ, Message } from './composants'
 import { nouvelId, useCoach } from './Etat'
-import { NOMS_RPE } from './texte'
+import { ECHELLE_RPE } from '../domaine/motivation'
 
 function ChoixRpe({ valeur, choisir }: { valeur: number | undefined; choisir: (rpe: number) => void }) {
   return (
     <div className="rpe">
-      <div className="rpe-boutons" role="group" aria-label="Ressenti de la séance, de 0 à 10">
-        {NOMS_RPE.map((nom, i) => (
-          <button key={i} type="button" className={valeur === i ? 'rpe-bouton rpe-actif' : 'rpe-bouton'} aria-pressed={valeur === i} aria-label={`${i} : ${nom}`} onClick={() => choisir(i)}>
-            {i}
+      <div className="rpe-boutons" role="group" aria-label="Ressenti de la séance, de 1 à 10">
+        {ECHELLE_RPE.map((n) => (
+          <button key={n.valeur} type="button" className={valeur === n.valeur ? 'rpe-bouton rpe-actif' : 'rpe-bouton'} aria-pressed={valeur === n.valeur} aria-label={`${n.valeur} : ${n.nom}`} onClick={() => choisir(n.valeur)}>
+            {n.valeur}
           </button>
         ))}
       </div>
-      <span className="champ-aide">{valeur === undefined ? 'Comment avez-vous ressenti la séance dans son ensemble ?' : `${valeur} : ${NOMS_RPE[valeur]}`}</span>
+      <span className="champ-aide">{valeur === undefined || valeur < 1 ? 'Comment avez-vous ressenti la séance dans son ensemble ?' : `${valeur} : ${ECHELLE_RPE[valeur - 1].nom}. ${ECHELLE_RPE[valeur - 1].repere}`}</span>
     </div>
   )
 }
 
-function FormulaireSeance({ seanceId, fermer }: { seanceId: string | null; fermer: () => void }) {
-  const { plan, jour, enregistrerActivite } = useCoach()
-  const prevue = toutesLesSeances(plan).find((s) => s.id === seanceId)
-  const [date, setDate] = useState(prevue && prevue.date <= jour ? prevue.date : jour)
-  const [km, setKm] = useState(prevue ? String(prevue.distanceKm).replace('.', ',') : '')
+function FormulaireSeance({ fermer }: { fermer: () => void }) {
+  const { plan, donnees, jour, enregistrerActivite } = useCoach()
+  const [date, setDate] = useState(jour)
+  const [km, setKm] = useState('')
   const [duree, setDuree] = useState('')
   const [fc, setFc] = useState('')
   const [denivele, setDenivele] = useState('')
@@ -43,6 +42,9 @@ function FormulaireSeance({ seanceId, fermer }: { seanceId: string | null; ferme
     if (!dureeS) return setErreur('Écrivez la durée sous la forme 45:00 ou 1:05:00 (un nombre seul compte en minutes).')
     const fcMoy = Number(fc)
     const dPlus = Number(denivele)
+    // Rattachement à la séance prévue ce jour-là, si elle est encore libre.
+    const prises = new Set(donnees.activites.map((a) => a.seanceId))
+    const prevue = toutesLesSeances(plan).find((s) => s.date === date && !prises.has(s.id))
     const activite: Activite = {
       id: nouvelId(),
       version: VERSION_DONNEES,
@@ -55,14 +57,14 @@ function FormulaireSeance({ seanceId, fermer }: { seanceId: string | null; ferme
       ...(fcMoy > 30 ? { fcMoy } : {}),
       ...(dPlus > 0 ? { denivelePosM: dPlus, deniveleNegM: dPlus, distanceEquivPlatM: Math.round(distanceEquivalenteApprochee(distanceM, dPlus)) } : {}),
       ...(rpe !== undefined ? { rpe } : {}),
-      ...(prevue && prevue.date === date ? { seanceId: prevue.id } : {}),
+      ...(prevue ? { seanceId: prevue.id } : {}),
     }
     await enregistrerActivite(activite)
     fermer()
   }
 
   return (
-    <Carte titre={prevue ? `Séance réalisée : ${prevue.titre}` : 'Saisir une séance'}>
+    <Carte titre="Saisir une séance">
       <form onSubmit={valider} className="formulaire">
         <Champ libelle="Date">
           <input type="date" value={date} max={jour} onChange={(e) => setDate(e.target.value)} required />
@@ -166,9 +168,9 @@ function CarteActivite({ activite }: { activite: Activite }) {
   )
 }
 
-export function EcranJournal({ seanceASaisir, terminerSaisie }: { seanceASaisir: string | null; terminerSaisie: () => void }) {
+export function EcranJournal() {
   const { donnees, plan, profil, fcMax, enregistrerActivite } = useCoach()
-  const [saisie, setSaisie] = useState(seanceASaisir !== null)
+  const [saisie, setSaisie] = useState(false)
   const [messages, setMessages] = useState<{ type: 'erreur' | 'succes' | 'info'; texte: string }[]>([])
   const activites = useMemo(() => [...donnees.activites].sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id)), [donnees.activites])
 
@@ -190,6 +192,18 @@ export function EcranJournal({ seanceASaisir, terminerSaisie }: { seanceASaisir:
           retours.push({ type: 'info', texte: `${fichier.name} : déjà dans le journal.` })
           continue
         }
+        // La séance a déjà été notée à la main (ressenti saisi en fin de séance) :
+        // les mesures de la montre remplacent l'estimation, le ressenti est gardé.
+        const aCompleter = connues.find((a) => a.date === resume.date && a.source === 'manuel' && a.seanceId)
+        if (aCompleter) {
+          const { rpe, tempsZonesS, trimp, fcMoy, fcMax: fcMaxSeance, denivelePosM, deniveleNegM, distanceEquivPlatM, ...reste } = aCompleter
+          void [tempsZonesS, trimp, fcMoy, fcMaxSeance, denivelePosM, deniveleNegM, distanceEquivPlatM]
+          const completee: Activite = { ...reste, ...resume, nomFichier: fichier.name, ...(rpe !== undefined ? { rpe } : {}) }
+          await enregistrerActivite(completee)
+          connues[connues.indexOf(aCompleter)] = completee
+          retours.push({ type: 'succes', texte: `${fichier.name} : mesures ajoutées à la séance du ${formaterDate(resume.date)}, ressenti conservé.` })
+          continue
+        }
         // Rattachement à la séance prévue le même jour, si elle est encore libre.
         const prises = new Set(connues.map((a) => a.seanceId))
         const prevue = toutesLesSeances(plan).find((s) => s.date === resume.date && !prises.has(s.id))
@@ -204,16 +218,11 @@ export function EcranJournal({ seanceASaisir, terminerSaisie }: { seanceASaisir:
     setMessages(retours)
   }
 
-  function fermer() {
-    setSaisie(false)
-    terminerSaisie()
-  }
-
   return (
     <>
       <h1>Journal</h1>
       {saisie ? (
-        <FormulaireSeance seanceId={seanceASaisir} fermer={fermer} />
+        <FormulaireSeance fermer={() => setSaisie(false)} />
       ) : (
         <div className="boutons">
           <label className="bouton bouton-principal">

@@ -693,3 +693,355 @@ details > summary {
   opacity: 0.5;
   cursor: default;
 }
+
+/* ── Écran du jour ── */
+.seance-titre {
+  font-size: 1.35rem;
+  line-height: 1.25;
+}
+
+.seance-mesures {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.conseil {
+  background: var(--vert-clair);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.bouton-grand {
+  width: 100%;
+  min-height: 60px;
+  font-size: 1.15rem;
+  margin: 4px 0 12px;
+}
+
+.boutons-secondaires .bouton {
+  flex: 1 1 140px;
+  font-size: 0.9rem;
+}
+
+.partie {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--discret);
+  margin: 12px 0 2px;
+}
+
+.detail-seance ul {
+  margin: 0 0 6px;
+  padding-left: 20px;
+}
+
+.variantes {
+  margin: 8px 0 0;
+  font-size: 0.9rem;
+}
+
+.variantes dt {
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+.variantes dd {
+  margin: 0;
+  color: var(--discret);
+}
+
+.motivation {
+  margin: 0 0 14px;
+}
+
+.motivation-chiffres {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: var(--discret);
+  margin-bottom: 6px;
+}
+
+.motivation-chiffres strong {
+  color: var(--texte);
+  font-size: 1.15rem;
+}
+
+.jauge {
+  height: 8px;
+  background: var(--bord);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.jauge span {
+  display: block;
+  height: 100%;
+  background: var(--seuil);
+  border-radius: 999px;
+}
+
+.badges {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.badge {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  opacity: 0.55;
+}
+
+.badge-obtenu {
+  opacity: 1;
+}
+
+.medaille {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 3px solid var(--bord);
+}
+
+.badge-obtenu .medaille,
+.soleil-badge .medaille {
+  border-color: var(--seuil);
+  background: radial-gradient(circle at 35% 35%, #ffe08a, var(--seuil));
+}
+
+/* ── Séance en cours : lisible en plein soleil ──
+   Noir sur blanc quel que soit le thème, contraste maximal, très gros
+   caractères, aucune couleur porteuse de sens à elle seule. */
+.soleil {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  color: #000;
+  padding: calc(env(safe-area-inset-top) + 12px) 18px calc(env(safe-area-inset-bottom) + 18px);
+  overflow-y: auto;
+}
+
+.soleil-effort {
+  background: #000;
+  color: #fff;
+}
+
+.soleil-tete {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.soleil-tete > :last-child {
+  justify-self: end;
+}
+
+.soleil-tete > :first-child {
+  justify-self: start;
+}
+
+.soleil-lien {
+  font: inherit;
+  font-weight: 700;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 12px 4px;
+  min-height: 44px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.soleil-progression {
+  height: 10px;
+  border: 2px solid currentColor;
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 4px 0 0;
+}
+
+.soleil-progression span {
+  display: block;
+  height: 100%;
+  background: currentColor;
+}
+
+.soleil-centre {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  padding: 12px 0;
+}
+
+.soleil-centre p {
+  margin: 0;
+}
+
+.soleil-titre {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.soleil-repetition {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.soleil-mesure {
+  font-size: clamp(4.5rem, 26vw, 7.5rem);
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.soleil-mesure small {
+  font-size: 0.3em;
+  color: inherit;
+}
+
+.soleil-detail,
+.soleil-question {
+  font-size: 1.35rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.soleil-suite {
+  text-align: center;
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+
+.soleil-boutons {
+  display: grid;
+  gap: 10px;
+  justify-items: stretch;
+}
+
+.soleil-bouton {
+  font: inherit;
+  font-size: 1.4rem;
+  font-weight: 800;
+  min-height: 68px;
+  border-radius: 14px;
+  border: 3px solid currentColor;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.soleil-bouton-plein {
+  background: #000;
+  color: #fff;
+  border-color: #000;
+}
+
+.soleil-effort .soleil-bouton-plein {
+  background: #fff;
+  color: #000;
+  border-color: #fff;
+}
+
+.soleil-bouton:disabled {
+  opacity: 0.35;
+}
+
+.soleil :focus-visible {
+  outline: 4px solid #1a5fd0;
+  outline-offset: 3px;
+}
+
+.soleil-curseur {
+  width: 100%;
+  height: 48px;
+  min-height: 48px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  accent-color: #000;
+}
+
+.soleil-graduations {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+.soleil-chiffre {
+  font: inherit;
+  font-size: 1.15rem;
+  font-weight: 800;
+  min-height: 48px;
+  padding: 0;
+  border: 2px solid #000;
+  border-radius: 10px;
+  background: #fff;
+  color: #000;
+  cursor: pointer;
+}
+
+.soleil-chiffre-actif {
+  background: #000;
+  color: #fff;
+}
+
+.soleil-ajuster {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+.soleil-ajuster summary {
+  padding: 10px 0;
+  min-height: 44px;
+}
+
+.soleil input:not([type='range']) {
+  background: #fff;
+  color: #000;
+  border: 2px solid #000;
+}
+
+.soleil .champ-libelle {
+  color: #000;
+}
+
+.soleil-serie {
+  font-size: 1.2rem;
+  margin-top: 16px !important;
+}
+
+.soleil-badge {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  text-align: left;
+  border: 3px solid #000;
+  border-radius: 14px;
+  padding: 14px;
+  margin-top: 14px;
+  font-size: 1.05rem;
+}

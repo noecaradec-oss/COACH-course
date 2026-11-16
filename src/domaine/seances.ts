@@ -71,6 +71,13 @@ export interface FicheSeance {
 
 export const SEANCES = (base as unknown as { seances: FicheSeance[] }).seances
 
+const PAR_ID = new Map(SEANCES.map((f) => [f.id, f]))
+
+/** Fiche d'origine d'une séance du plan (objectif, variantes, source). */
+export function ficheParId(id: string | undefined): FicheSeance | undefined {
+  return id ? PAR_ID.get(id) : undefined
+}
+
 /** VDOT du coureur type de chaque niveau, utilisé pour les durées estimées des fiches. */
 export const VDOT_REFERENCE: Record<Niveau, number> = { 1: 32, 2: 45, 3: 56 }
 

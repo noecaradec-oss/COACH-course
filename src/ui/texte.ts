@@ -2,7 +2,7 @@
 
 import type { CategorieIntensite } from '../domaine/charge'
 import { formaterAllure, formaterDuree } from '../domaine/format'
-import type { Bloc, Phase, TypeEvaluation, TypeObjectif, TypeSeance } from '../domaine/modele'
+import type { Bloc, Phase, TypeEvaluation, TypeObjectif } from '../domaine/modele'
 import type { Allures, Realisme } from '../domaine/vdot'
 
 export function dureeCourte(secondes: number): string {
@@ -18,7 +18,7 @@ function effort(bloc: Bloc): string {
   return d >= 1000 ? `${(d / 1000).toFixed(d % 1000 === 0 ? 0 : 1).replace('.', ',')} km` : `${d} m`
 }
 
-function intensite(bloc: Bloc, allures: Allures | null, type: TypeSeance): string {
+function intensite(bloc: Bloc, allures: Allures | null): string {
   switch (bloc.allure) {
     case 'marche':
       return 'de marche'
@@ -36,15 +36,19 @@ function intensite(bloc: Bloc, allures: Allures | null, type: TypeSeance): strin
     case 'T':
       return allures ? `au seuil (${formaterAllure(allures.T)})` : 'au seuil'
     case 'I':
-      if (type === 'cotes') return 'en côte, effort soutenu'
       return allures ? `à ${formaterAllure(allures.I)}` : 'vite'
     case 'R':
       return allures ? `vite, vers ${formaterAllure(allures.R)}` : 'vite'
   }
 }
 
-export function decrireBloc(bloc: Bloc, allures: Allures | null, type: TypeSeance): string {
-  const base = `${bloc.repetitions > 1 ? `${bloc.repetitions} × ` : ''}${effort(bloc)} ${intensite(bloc, allures, type)}`.trim()
+export function decrireBloc(bloc: Bloc, allures: Allures | null): string {
+  const fois = bloc.repetitions > 1 ? `${bloc.repetitions} × ` : ''
+  // Un exercice se lit par son nom ; sa durée n'est qu'un ordre de grandeur.
+  if (bloc.allure === 'exercice') return `${fois}${bloc.libelle ?? 'exercice'}${bloc.recupS && bloc.repetitions > 1 ? `, ${dureeCourte(bloc.recupS)} de repos` : ''}`
+  const precision = bloc.libelle ? ` (${bloc.libelle.charAt(0).toLowerCase()}${bloc.libelle.slice(1)})` : ''
+  const enCote = bloc.libelle?.includes('Côte') ?? false
+  const base = `${fois}${effort(bloc)} ${enCote ? 'en côte, effort soutenu' : intensite(bloc, allures)}`.trim() + (enCote ? '' : precision)
   if (!bloc.recupS || bloc.repetitions <= 1) return base
   return `${base}, récupération ${dureeCourte(bloc.recupS)} ${bloc.recupMode === 'marche' ? 'en marchant' : 'en trottinant'}`
 }
@@ -84,5 +88,4 @@ export const TEXTES_REALISME: Record<Realisme, string> = {
   peuRealiste: 'Objectif peu réaliste dans ce délai. Un temps intermédiaire serait plus sûr.',
 }
 
-// Échelle de ressenti de la séance, de 0 à 10 (Foster et al., 2001).
-export const NOMS_RPE = ['Repos', 'Très, très facile', 'Facile', 'Modéré', 'Un peu dur', 'Dur', 'Dur', 'Très dur', 'Très dur', 'Extrêmement dur', 'Maximal']
+export const NOMS_PARTIES = { echauffement: 'Échauffement', corps: 'Séance', retour: 'Retour au calme', complement: 'Complément' } as const

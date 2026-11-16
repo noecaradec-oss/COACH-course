@@ -9,6 +9,7 @@ import { ErreurSauvegarde, exporter, importer } from '../donnees/sauvegarde'
 import { Carte, Champ, Message } from './composants'
 import { nouvelId, useCoach } from './Etat'
 import { NOMS_JOURS } from '../domaine/dates'
+import { calculerBadges, meilleureSerie, palierActuel } from '../domaine/motivation'
 import { reponsesDepuis } from '../domaine/questionnaire'
 import { Questionnaire } from './Questionnaire'
 import { NOMS_EVALUATIONS } from './texte'
@@ -177,7 +178,7 @@ function Sauvegarde() {
 const NOMS_NIVEAUX = { 1: 'Débutant', 2: 'Intermédiaire', 3: 'Confirmé' }
 
 export function EcranProfil() {
-  const { donnees, profil, objectif, evaluation, allures, fcMax, fcMaxEstimee, supprimerEvaluation } = useCoach()
+  const { donnees, profil, objectif, plan, jour, evaluation, allures, fcMax, fcMaxEstimee, supprimerEvaluation } = useCoach()
   const [edition, setEdition] = useState(false)
   const evaluations = [...donnees.evaluations].sort((a, b) => b.date.localeCompare(a.date))
   if (!profil) return null
@@ -299,6 +300,26 @@ export function EcranProfil() {
           </p>
         </Carte>
       )}
+
+      <Carte titre="Badges">
+        <p className="aide">
+          Palier {palierActuel(donnees.activites).numero} · {palierActuel(donnees.activites).nom} · meilleure série : {meilleureSerie(donnees.activites, plan)} semaine(s)
+        </p>
+        <ul className="badges">
+          {calculerBadges(donnees.activites, plan, jour).map((b) => (
+            <li key={b.id} className={b.obtenu ? 'badge badge-obtenu' : 'badge'}>
+              <span className="medaille" aria-hidden="true" />
+              <span>
+                <strong>{b.nom}</strong>
+                <br />
+                <small>
+                  {b.description} {b.obtenu ? 'Obtenu.' : `${b.actuel} sur ${b.cible}.`}
+                </small>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </Carte>
 
       <Sauvegarde />
 
