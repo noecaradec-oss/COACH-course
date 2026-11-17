@@ -142,7 +142,7 @@ export function EcranAujourdhui({ aller, lancer }: { aller: (o: Onglet) => void;
   const prochaines = toutesLesSeances(plan)
     .filter((s) => s.date > jour)
     .slice(0, 3)
-  const alertes = calculerAlertes(donnees.activites, plan, jour)
+  const alertes = calculerAlertes(donnees.activites, plan, jour, profil?.volumeHebdoKm)
   const joursRestants = objectif ? joursEntre(jour, objectif.date) : null
 
   return (

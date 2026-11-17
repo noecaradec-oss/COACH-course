@@ -101,15 +101,22 @@ export interface Alerte {
  * Signaux à surveiller. Chaque alerte rappelle sa source : ce sont des
  * repères issus d'études de groupe, pas des diagnostics individuels.
  */
-export function calculerAlertes(activites: Activite[], plan: Plan | null, jour: DateIso): Alerte[] {
+export function calculerAlertes(activites: Activite[], plan: Plan | null, jour: DateIso, volumeDeclareKm = 0): Alerte[] {
   const alertes: Alerte[] = []
   const bilans = bilansHebdo(activites, plan, jour, 3)
   const [avantDerniere, derniere, courante] = bilans
 
+  // La première semaine du journal est souvent incomplète (le coureur importe
+  // son historique à partir d'une date quelconque). Pour elle, la référence
+  // est le volume déclaré au questionnaire s'il est plus élevé. Choix
+  // d'entraîneur : un débutant qui a déclaré 0 km garde l'alerte.
+  const premiere = activites.reduce<DateIso | null>((min, a) => (min === null || a.date < min ? a.date : min), null)
+  const reference = (b: BilanSemaine) => (premiere !== null && lundiDe(premiere) === b.debut ? Math.max(b.km, volumeDeclareKm) : b.km)
+
   // Hausse du kilométrage : semaine en cours ou dernière semaine terminée.
-  const hausse = hausseTropRapide(derniere.km, courante.km)
+  const hausse = hausseTropRapide(reference(derniere), courante.km)
     ? [derniere.km, courante.km]
-    : hausseTropRapide(avantDerniere.km, derniere.km)
+    : hausseTropRapide(reference(avantDerniere), derniere.km)
       ? [avantDerniere.km, derniere.km]
       : null
   if (hausse) {

@@ -1,6 +1,6 @@
 import { Encoder, type FileIdMesg, type LapMesg, Profile, type RecordMesg, type SessionMesg } from '@garmin/fitsdk'
 import { describe, expect, it } from 'vitest'
-import { ErreurFit, decoderFit, resumerFit } from './lireFit'
+import { ErreurFit, decoderFit, denivelesDepuisPoints, resumerFit } from './lireFit'
 
 const DEBUT = new Date(2026, 10, 14, 9, 0, 0) // 14 nov. 2026, 9 h, heure locale
 
@@ -134,5 +134,54 @@ describe('lecture d’un fichier .fit (SDK Garmin)', () => {
     abime[abime.length - 20] ^= 0xff
     expect(() => decoderFit(abime.buffer as ArrayBuffer)).toThrow(ErreurFit)
     expect(() => resumerFit({})).toThrow(ErreurFit)
+  })
+
+  it('recalcule distance et FC des tours quand le fichier ne les donne pas (exports Strava)', () => {
+    const t0 = DEBUT.getTime()
+    const r = resumerFit({
+      sessionMesgs: [{ startTime: DEBUT, totalDistance: 2000, totalTimerTime: 600, totalElapsedTime: 600 }],
+      recordMesgs: Array.from({ length: 601 }, (_, s) => ({ timestamp: new Date(t0 + s * 1000), distance: (s / 600) * 2000, heartRate: s < 300 ? 140 : 160 })),
+      lapMesgs: [
+        { startTime: DEBUT, timestamp: new Date(t0 + 300_000), totalTimerTime: 300 },
+        { startTime: new Date(t0 + 300_000), timestamp: new Date(t0 + 600_000), totalTimerTime: 300 },
+        // Dernier tour parasite de 0,3 s ajouté par Strava.
+        { startTime: new Date(t0 + 600_000), timestamp: new Date(t0 + 600_300), totalTimerTime: 0.3 },
+      ],
+    })
+    expect(r.tours).toHaveLength(2)
+    expect(r.tours[0]).toEqual({ distanceM: 1000, dureeS: 300, fcMoy: 140 })
+    // Le point de bascule (s = 300) appartient aux deux tours : 1 point à 140 sur 301.
+    expect(r.tours[1].distanceM).toBe(1000)
+    expect(r.tours[1].fcMoy).toBe(160)
+  })
+
+  it('recalcule le dénivelé depuis les points quand la session ne le donne pas', () => {
+    // Montée de 0 à 20 m, descente à 5 m. Le bruit de ±1 m ne compte pas, ni le sommet à 21 m (sous le seuil de 3 m).
+    const profil = [0, 1, 0, 1, 5, 10, 9, 10, 15, 20, 21, 20, 15, 10, 11, 10, 5]
+    expect(denivelesDepuisPoints(profil.map((altitudeM) => ({ altitudeM })))).toEqual({ plus: 20, moins: 15 })
+    expect(denivelesDepuisPoints([{ altitudeM: 10 }])).toBeNull()
+    expect(denivelesDepuisPoints([{}, {}])).toBeNull()
+    const t0 = DEBUT.getTime()
+    const r = resumerFit({
+      sessionMesgs: [{ startTime: DEBUT, totalDistance: 1700, totalTimerTime: 600 }],
+      recordMesgs: profil.map((altitudeM, i) => ({ timestamp: new Date(t0 + i * 1000), distance: i * 100, enhancedAltitude: altitudeM })),
+    })
+    expect(r.denivelePosM).toBe(20)
+    expect(r.deniveleNegM).toBe(15)
+  })
+
+  it('reconstitue la distance par la vitesse quand les points n’en ont pas', () => {
+    const t0 = DEBUT.getTime()
+    // 3 m/s pendant 200 s, puis une pause de 60 s (non comptée), puis 100 s.
+    const temps = [...Array.from({ length: 201 }, (_, s) => s), ...Array.from({ length: 101 }, (_, s) => 260 + s)]
+    const r = resumerFit({
+      sessionMesgs: [{ startTime: DEBUT, totalDistance: 900, totalTimerTime: 300 }],
+      recordMesgs: temps.map((s, i) => ({ timestamp: new Date(t0 + s * 1000), speed: 3, ...(i === 0 ? { distance: 0 } : {}) })),
+      lapMesgs: [
+        { startTime: DEBUT, timestamp: new Date(t0 + 200_000), totalTimerTime: 200 },
+        { startTime: new Date(t0 + 260_000), timestamp: new Date(t0 + 360_000), totalTimerTime: 100 },
+      ],
+    })
+    expect(r.tours.map((t) => t.distanceM)).toEqual([600, 300])
   })
 })

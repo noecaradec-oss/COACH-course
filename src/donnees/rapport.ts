@@ -71,8 +71,9 @@ export function construireRapport({ donnees, plan, objectif, evaluation, jour }:
   if (comparaisons.length === 0) pdf.paragraphe('Aucune séance enregistrée pour l’instant.')
   else {
     pdf.paragraphe(
-      `${s.seancesFaites} séances faites sur ${s.seancesPrevues} prévues (${s.seancesManquees} manquées), ${s.seancesHorsPlan} hors plan. ` +
-        `${fr(s.kmRealises)} km courus pour ${fr(s.kmPrevus)} km prévus.` +
+      (s.seancesPrevues > 0
+        ? `${s.seancesFaites} séances faites sur ${s.seancesPrevues} prévues (${s.seancesManquees} manquées), ${s.seancesHorsPlan} hors plan. ${fr(s.kmRealises)} km courus pour ${fr(s.kmPrevus)} km prévus.`
+        : `${s.seancesHorsPlan} sortie(s) hors plan, ${fr(s.kmRealises)} km.`) +
         (s.ecartRpeMoyen !== null ? ` Écart moyen de ressenti : ${signe(s.ecartRpeMoyen)} point (positif = plus dur que prévu).` : ''),
     )
   }
@@ -104,7 +105,7 @@ export function construireRapport({ donnees, plan, objectif, evaluation, jour }:
   pdf.paragraphe('Charge = ressenti (RPE, 1 à 10) × minutes, additionnée sur la semaine (Foster et al., 2001). Monotonie = charge moyenne par jour / écart-type (Foster, 1998) ; à garder sous 2.', 8)
 
   // ── Alertes ──
-  const alertes = calculerAlertes(activites, plan, jour)
+  const alertes = calculerAlertes(activites, plan, jour, profil?.volumeHebdoKm)
   if (alertes.length > 0) {
     pdf.sousTitre('Signaux à surveiller')
     for (const a of alertes) pdf.paragraphe(`${a.titre}. ${a.detail} (${a.source})`)

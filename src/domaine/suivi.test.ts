@@ -110,6 +110,16 @@ describe('alertes', () => {
     expect(alertes).toHaveLength(1)
     expect(alertes[0].detail).toContain('+50 %')
   })
+  it('ne juge pas la première semaine du journal sur ses seuls kilomètres quand le coureur a déclaré plus', () => {
+    // Historique importé à partir d'un dimanche : 8 km cette semaine-là, puis 30 km.
+    const journal = [activite('2026-11-08', 8, 50), activite('2026-11-10', 10, 60), activite('2026-11-12', 10, 60), activite('2026-11-14', 10, 60)]
+    expect(calculerAlertes(journal, null, JOUR, 35)).toEqual([])
+    // Un débutant qui a déclaré 0 km garde l'alerte.
+    expect(calculerAlertes(journal, null, JOUR, 0)[0].titre).toBe('Kilométrage en forte hausse')
+    // Et la référence déclarée ne vaut que pour la première semaine.
+    const plusTard = [activite('2026-10-27', 30, 180), ...journal]
+    expect(calculerAlertes(plusTard, null, JOUR, 35)[0].titre).toBe('Kilométrage en forte hausse')
+  })
   it('signale une semaine monotone (Foster, 1998)', () => {
     // Sept jours presque identiques la semaine du 9 au 15.
     const semaine = ['09', '10', '11', '12', '13', '14', '15'].map((j, i) => activite(`2026-11-${j}`, 8, 48, i === 0 ? 4 : 3))

@@ -60,11 +60,11 @@ function LignePrevuRealise({ ligne }: { ligne: Comparaison }) {
 }
 
 export function EcranSuivi() {
-  const { donnees, plan, objectif, jour, evaluation } = useCoach()
+  const { donnees, plan, objectif, jour, evaluation, profil } = useCoach()
   const { activites } = donnees
   const bilans = bilansHebdo(activites, plan, jour, NB_SEMAINES)
   const regularite = regulariteHebdo(plan, activites, jour, NB_SEMAINES)
-  const alertes = calculerAlertes(activites, plan, jour)
+  const alertes = calculerAlertes(activites, plan, jour, profil?.volumeHebdoKm)
   const repartition = repartitionRecente(activites, plan, jour)
   const rpe = serieRpe(plan, activites, 12)
   const niveaux = historiqueNiveau(donnees.evaluations)
@@ -100,15 +100,23 @@ export function EcranSuivi() {
       {comparaisons.length > 0 && (
         <Carte titre="Prévu et réalisé">
           <p className="chiffres">
-            <span>
-              <strong>
-                {synthese.seancesFaites} / {synthese.seancesPrevues}
-              </strong>{' '}
-              séances faites
-            </span>
-            <span>
-              <strong>{fr(Math.round(synthese.kmRealises))}</strong> km sur {fr(Math.round(synthese.kmPrevus))} prévus
-            </span>
+            {synthese.seancesPrevues > 0 ? (
+              <>
+                <span>
+                  <strong>
+                    {synthese.seancesFaites} / {synthese.seancesPrevues}
+                  </strong>{' '}
+                  séances faites
+                </span>
+                <span>
+                  <strong>{fr(Math.round(synthese.kmRealises))}</strong> km sur {fr(Math.round(synthese.kmPrevus))} prévus
+                </span>
+              </>
+            ) : (
+              <span>
+                <strong>{synthese.seancesHorsPlan}</strong> sortie{synthese.seancesHorsPlan > 1 ? 's' : ''} hors plan · <strong>{fr(Math.round(synthese.kmRealises))}</strong> km
+              </span>
+            )}
             {synthese.ecartRpeMoyen !== null && (
               <span>
                 <strong>{synthese.ecartRpeMoyen > 0 ? `+${fr(synthese.ecartRpeMoyen)}` : fr(synthese.ecartRpeMoyen)}</strong> de ressenti
@@ -123,7 +131,7 @@ export function EcranSuivi() {
                 <LignePrevuRealise key={`${l.date}-${l.prevue?.id ?? l.activite?.id}`} ligne={l} />
               ))}
           </ul>
-          <p className="aide">Les 6 dernières séances. À droite : ressenti réel, puis ressenti prévu ; l’écart est signalé à partir de 2 points. Tout le détail est dans les exports.</p>
+          <p className="aide">Les dernières séances. À droite : ressenti réel, puis ressenti prévu ; l’écart est signalé à partir de 2 points. Tout le détail est dans les exports.</p>
           <div className="boutons">
             <button type="button" className="bouton" onClick={() => telecharger(`coach-course-seances-${jour}.csv`, exporterCsv(comparaisons), 'text/csv;charset=utf-8')}>
               Exporter en CSV

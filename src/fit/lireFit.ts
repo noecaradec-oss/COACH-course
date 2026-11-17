@@ -41,6 +41,17 @@ const PAUSE_S = 10
 // de l'altitude GPS ou barométrique. Seuil technique.
 const TRONCON_M = 100
 
+// Dénivelé recalculé depuis les points quand le fichier ne le donne pas
+// (cas des exports Strava) : on ne compte une montée ou une descente
+// qu'au-delà de 3 m d'écart avec le dernier palier retenu, pour ne pas
+// additionner le bruit de l'altitude. Seuil technique, pas une règle
+// d'entraînement.
+const SEUIL_DENIVELE_M = 3
+
+// Certains logiciels (Strava notamment) ajoutent un dernier tour de moins
+// d'une seconde. Sous 3 s, un tour n'est pas un vrai tour. Seuil technique.
+const TOUR_MIN_S = 3
+
 interface Point {
   t: number
   fc?: number
@@ -63,7 +74,16 @@ export function resumerFit(messages: FitMessages, coureur: ContexteCoureur = {})
   for (const r of messages.recordMesgs ?? []) {
     const t = secondes(r.timestamp)
     if (t === undefined) continue
-    points.push({ t, fc: r.heartRate, distanceM: r.distance, altitudeM: r.enhancedAltitude ?? r.altitude })
+    // Certains exports (Strava) ne donnent pas la distance des points, seulement la
+    // vitesse : on cumule alors vitesse × temps, sans compter les pauses.
+    const precedent = points.at(-1)
+    const vitesse = r.enhancedSpeed ?? r.speed
+    let distanceM = r.distance
+    if (distanceM === undefined && vitesse !== undefined && precedent?.distanceM !== undefined) {
+      const dt = t - precedent.t
+      distanceM = precedent.distanceM + (dt > 0 && dt <= PAUSE_S ? vitesse * dt : 0)
+    }
+    points.push({ t, fc: r.heartRate, distanceM, altitudeM: r.enhancedAltitude ?? r.altitude })
   }
 
   const debut = session?.startTime instanceof Date ? session.startTime : points.length > 0 ? new Date(points[0].t * 1000) : undefined
@@ -76,12 +96,20 @@ export function resumerFit(messages: FitMessages, coureur: ContexteCoureur = {})
   if (!(dureeS > 0)) throw new ErreurFit('Ce fichier ne contient pas de durée d’activité.')
 
   const tours: Tour[] = (messages.lapMesgs ?? [])
-    .filter((l) => (l.totalTimerTime ?? 0) > 0)
-    .map((l) => ({
-      distanceM: Math.round(l.totalDistance ?? 0),
-      dureeS: Math.round(l.totalTimerTime ?? 0),
-      ...(l.avgHeartRate ? { fcMoy: l.avgHeartRate } : {}),
-    }))
+    .filter((l) => (l.totalTimerTime ?? 0) >= TOUR_MIN_S)
+    .map((l) => {
+      // Tour sans distance ni FC (exports Strava) : on les recalcule avec les points du tour.
+      const debutTour = secondes(l.startTime)
+      const finTour = secondes(l.timestamp)
+      const duTour = debutTour !== undefined && finTour !== undefined ? points.filter((p) => p.t >= debutTour && p.t <= finTour) : []
+      const distance = l.totalDistance ?? distanceEntre(duTour)
+      const fc = l.avgHeartRate ?? moyenneFc(duTour)
+      return {
+        distanceM: Math.round(distance ?? 0),
+        dureeS: Math.round(l.totalTimerTime ?? 0),
+        ...(fc ? { fcMoy: Math.round(fc) } : {}),
+      }
+    })
 
   const resume: ResumeFit = {
     date: aujourdHui(debut),
@@ -94,8 +122,9 @@ export function resumerFit(messages: FitMessages, coureur: ContexteCoureur = {})
   if (fcMoy) resume.fcMoy = Math.round(fcMoy)
   const fcMaxSeance = session?.maxHeartRate ?? maxFc(points)
   if (fcMaxSeance) resume.fcMax = fcMaxSeance
-  const dPlus = arrondi(session?.totalAscent)
-  const dMoins = arrondi(session?.totalDescent)
+  const deniveles = session?.totalAscent === undefined ? denivelesDepuisPoints(points) : null
+  const dPlus = arrondi(session?.totalAscent ?? deniveles?.plus)
+  const dMoins = arrondi(session?.totalDescent ?? deniveles?.moins)
   if (dPlus !== undefined) resume.denivelePosM = dPlus
   if (dMoins !== undefined) resume.deniveleNegM = dMoins
 
@@ -106,6 +135,31 @@ export function resumerFit(messages: FitMessages, coureur: ContexteCoureur = {})
   const equivalent = equivalentPlat(points)
   if (equivalent !== undefined) resume.distanceEquivPlatM = equivalent
   return resume
+}
+
+/** Distance parcourue entre le premier et le dernier point qui en portent une. */
+function distanceEntre(points: Point[]): number | undefined {
+  const avec = points.filter((p) => p.distanceM !== undefined)
+  return avec.length >= 2 ? avec[avec.length - 1].distanceM! - avec[0].distanceM! : undefined
+}
+
+/** Dénivelés positif et négatif, avec un seuil d'hystérésis (voir SEUIL_DENIVELE_M). */
+export function denivelesDepuisPoints(points: { altitudeM?: number }[]): { plus: number; moins: number } | null {
+  const altitudes = points.map((p) => p.altitudeM).filter((a): a is number => a !== undefined)
+  if (altitudes.length < 2) return null
+  let palier = altitudes[0]
+  let plus = 0
+  let moins = 0
+  for (const a of altitudes) {
+    if (a - palier >= SEUIL_DENIVELE_M) {
+      plus += a - palier
+      palier = a
+    } else if (palier - a >= SEUIL_DENIVELE_M) {
+      moins += palier - a
+      palier = a
+    }
+  }
+  return { plus, moins }
 }
 
 function moyenneFc(points: Point[]): number | undefined {
